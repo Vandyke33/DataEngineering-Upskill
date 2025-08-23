@@ -2,9 +2,13 @@ import requests
 from airflow.sdk import dag, task
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.sdk.bases.sensor import PokeReturnValue
-from providers.amazon.src.airflow.providers.amazon.aws.sensors.s3 import S3KeySensor
+from airflow.providers.standard.operators.python import PythonOperator
+from airflow.providers.amazon.aws.sensors.s3 import S3KeySensor
+
+MY_BUCKET_KEY = None
 
 f = S3KeySensor(
+        task_id="s3_key_sensor_task",
         aws_conn_id="aws_default",
         region_name="ap-south-1",
         verify="None",
