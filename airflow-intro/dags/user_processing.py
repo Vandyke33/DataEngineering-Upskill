@@ -1,5 +1,8 @@
-from airflow.sdk import dag
+import requests
+from airflow.sdk import dag, task
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
+from airflow.sdk.bases.sensor import PokeReturnValue
+from providers.amazon.src.airflow.providers.amazon.aws.sensors.s3 import S3KeySensor
 
 @dag
 def user_processing():
@@ -14,8 +17,25 @@ def user_processing():
         email VARCHAR(255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ) 
-        """
-        
+        """        
     )
+
+    @task.sensor(poke_interval=10, timeout=60*5, mode="reschedule")
+    def is_api_available() -> PokeReturnValue:
+        try:
+            response = requests.get("https://raw.githubusercontent.com/marclamberti/datasets/refs/heads/main/fakeuser.json")
+            print(response.status_code)
+            if response.status_code == 200:
+                condition = True
+                fake_user = response.json()
+            else:
+                condition = False
+                fake_user = None
+            return PokeReturnValue(is_done=condition, xcom_value=fake_user)
+        
+        except requests.RequestException as e:
+            return PokeReturnValue(False, f"Request failed: {e}")
+    
+    is_api_available()
 
 user_processing()
