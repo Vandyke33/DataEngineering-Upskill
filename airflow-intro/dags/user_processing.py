@@ -1,4 +1,6 @@
 import requests
+from typing import Any, Dict
+from datetime import datetime
 from airflow.sdk import dag, task
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.sdk.bases.sensor import PokeReturnValue
@@ -6,7 +8,7 @@ from airflow.providers.standard.operators.python import PythonOperator
 from airflow.providers.amazon.aws.sensors.s3 import S3KeySensor
 
 
-def _extract_user(ti) -> None:
+def _extract_user(ti) -> Dict[str, Any]:
     # fake_user = ti.xcom_pull(task_ids="is_api_available")
     response = requests.get("https://raw.githubusercontent.com/marclamberti/datasets/refs/heads/main/fakeuser.json")
     fake_user = response.json()
